@@ -91,10 +91,29 @@ int main() {
     exit(1);
   }
 
+  SQLTCHAR hints[16] = "TABLOCK";
+  if ((bcp_control(dbc, BCPHINTS, (void * ) hints)) == FAIL) {
+    printf("Failed in bcp_control\n");
+    exit(1);
+  }
+
   if (bcp_bind(dbc, (LPCBYTE) & col1, 0, sizeof(SQLINTEGER), NULL, 0,
       SQLINT4, 1) == FAIL) {
     printf("Failed to bcp_bind \n");
     exit(1);
+  }
+
+  int c = 0;
+  while (c < 1000000) {
+    if (bcp_sendrow(dbc) == FAIL) {
+      printf("Failed during bcp sendrow");
+      exit(1);
+    }
+    c++;
+
+    if ((c % 10000) == 0 && c) {
+      bcp_batch(dbc);
+    }
   }
 
   if (bcp_sendrow(dbc) == FAIL) {
@@ -103,7 +122,7 @@ int main() {
   }
 
   if (bcp_done(dbc) == FAIL) {
-    printf("Failed during bcp sendrow");
+    printf("Failed during bcp_done");
     exit(1);
   }
 
